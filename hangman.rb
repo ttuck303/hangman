@@ -113,6 +113,21 @@ def is_game_over? #TO DO create a win and a loss message
 	did_player_win? || did_player_lose?
 end
 
+def save_game
+	# YAML dump the game_state variable, making it a text file
+	# save the text file
+	# with timestamp and name?
+
+end
+
+def load_game
+	# load the text file, then unwrap the YAML
+	# how do you specify which file to load? Is there a better way than typing out the file path?
+end
+
+
+
+
 def game_loop
 	initialize_new_game
 	#puts @secret_word
@@ -132,9 +147,8 @@ game_loop
 
 
 # now that there is a mostly-working hangman, next step is to create a saveable version
-# first put a git version up there incase you need to go back
 
-# then, divide game architecture into two parts:
+# divide game architecture into two parts:
 	# game state variable (hash with everything in it)
 	# architecture for running a game using a game state hash
 	# add options to start a new game, load a game, or save a game
