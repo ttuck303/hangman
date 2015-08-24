@@ -1,8 +1,6 @@
 require 'yaml'
 
-def initialize_new_game
-	puts Dir.pwd
-	@state_var = {}
+def initialize_new_game_vars
 	dic = File.new("5desk.txt", 'r')
 	game_dictionary = dic.readlines
 	dict_entry_count = game_dictionary.size
@@ -11,13 +9,17 @@ def initialize_new_game
 	secret_word = choose_random_word(game_dictionary)
 	encoded_word = encode_word(secret_word, letters_guessed)
 	spaces_remaining = count_spaces_remaining(encoded_word)
-	# check if a saved_game folder exists, and if it doesn't, create one
-	Dir.mkdir("saved_games") if !Dir.exists?("saved_games")
 	@state_var = {:letters_guessed => letters_guessed, :body_parts_remaining => body_parts_remaining, :secret_word => secret_word, :encoded_word => encoded_word, :spaces_remaining => spaces_remaining}
-	puts @state_var
-	puts @state_var.inspect
+end
 
-	puts "New game initialized!"
+def initialize_game(state_var)
+	@state_var = state_var
+	puts "State var set to #{state_var}"
+end
+
+def display_debug_info
+	puts @state_var
+	puts Dir.pwd
 end
 
 def word_length_ok?(sample_word, min_len = 5, max_len = 12)
@@ -122,6 +124,7 @@ def is_game_over? #TO DO create a win and a loss message
 end
 
 def save_game
+	Dir.mkdir("saved_games") if !Dir.exists?("saved_games") # this should be in the save game sequece
 	# convert state variable to yaml compressed file
 	docked_game_state = YAML.dump(@state_var)
 	# create a new file in the saved folder file path with an interative file name
@@ -136,44 +139,48 @@ def save_game
 	save_file.write(docked_game_state)
 		# close the file so that it saves
 	save_file.close
+	puts "Game saved!"
 end
 
+#refactor the loading game process
+#each individual operation should have its own method
 
 
-def display_saved_games
+
+
+# (maybe go one level of abstraction higher on this)
+
+
+# overall structure should be
+# method for loading a game from a game state
+# method for creating a brand new game state
+# initialization routine should ask if you would like to start a new game or load one
+
+
+def get_saved_games(game_path = "saved_games", regex_criteria = "Hangman - ")
 	output = []
-	regex_criteria = 'Hangman - '
-	# get an array of all the entries in a directory
-	file_path = "saved_games"
-	existing_games = Dir.entries("#{Dir.pwd}/#{file_path}")
-	# go through the array and only pick those that start with hangman - # (use regex)
-	existing_games.each do |fname|
-		output << fname if fname.match(regex_criteria)
-	end
-
+	existing_games = Dir.entries("#{Dir.pwd}/#{game_path}")
+	existing_games.each { |fname| output << fname if fname.match(regex_criteria)}
 	output.sort
-
 end
 
+def prompt_with_game_list(games)
+	puts "Enter the number of the game file you would like to load: "
+	games.each_with_index {|game, idx| puts "#{idx} : #{game}"}
+	puts
+end
 
-def load_game
-	# load the text file, then unwrap the YAML
-	# how do you specify which file to load? Is there a better way than typing out the file path?
+def get_and_check_user_input_loading(list_length)
+	user_input = gets.strip.to_i
+	puts "You selected #{user_input}"
+	display_debug_info
+	return user_input if (0..list_length-1).include?(user_input)
+	puts "Illegal entry, please try another number..."
+	get_and_check_user_input_loading(list_length)
 end
 
 def select_game
 
-	puts "The current directory is #{Dir.pwd}"
-	puts
-	# load the file names from the saved game folder
-	puts "Puts enter the game number you would like to load from: "
-	puts
-	saved_games = display_saved_games
-
-	# display as a numbered menu
-	saved_games.each_with_index do |sgame, idx|
-		puts "#{idx} :: #{sgame}"
-	end
 	choice = gets.strip.to_i
 	# TO-DO! clean and check the user input (for now just assume its good)
 	puts "You chose number #{choice}, #{saved_games[choice]}"
@@ -185,30 +192,65 @@ def select_game
 
 end
 
+def load_game_sequence(game_path="saved_games")
+	# retrieve the list of saved games from a given folder and return it as an array
+	# take a game array and ask the user to select a game from a numbered list 
+	# get the user input, and checks that its a number and that its in range, and returns that number
+	# take and returns an UnYaml-ed game state object
+	#load the yaml of the file
 
-	# start a new game with the loaded game state file, rather than a totally new game
+	saved_games = get_saved_games(game_path)
+	prompt_with_game_list(saved_games)
+	user_selection = get_and_check_user_input_loading(saved_games.size)
+	saved_game_file = File.open("#{Dir.pwd}/#{game_path}/#{saved_games[user_selection]}", "r")
+	puts "saved_game_file #{saved_game_file}"
+	unwrapped_game_state = YAML.load(saved_game_file)
+	puts "unwrapped_game_state #{unwrapped_game_state}"
+	unwrapped_game_state
+	#To-DO! Once this has been tested, collapse it down into a single line or two
+
+	# start a game from the game state variable
+end
+
+def new_or_load
+	puts "To start a new game, enter 1"
+	puts "To load an existing game, enter 2"
+	user_input = gets.strip.to_i
+	if user_input == 1
+		initialize_game(initialize_new_game_vars)
+	elsif user_input == 2
+		initialize_game(load_game_sequence)
+	else
+		puts "Invalid entry"
+		new_or_load
+	end
+end
+
+def ask_to_save_game
+	puts "Would you like to save the game? [y/n]"
+	user_input = gets.strip
+	save_game if user_input == 'y'
+end
 
 
 def game_loop
-	initialize_new_game
-	save_game
-	#puts @secret_word
+	new_or_load
 	update_game_state
 	display_game_state
 	until is_game_over?
+		#display_debug_info
 		score_guess(get_player_guess(@state_var[:letters_guessed]))
 		update_game_state
 		display_game_state
+		#ask_to_save_game
 	end
 	puts "You WIN! :)" if did_player_win?
 	puts "you LOSE =( The word was #{@state_var[:secret_word]}!" if did_player_lose?
-	save_game
+	5.times {puts}
+	game_loop
 end
 
-#game_loop
-
-puts display_saved_games
-select_game
+game_loop
 
 
 

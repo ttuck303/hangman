@@ -1,0 +1,11 @@
+---
+:letters_guessed:
+- a
+- e
+- i
+- l
+- r
+:body_parts_remaining: 4
+:secret_word: luminescence
+:encoded_word: 'l _ _ i _ e _ _ e _ _ e '
+:spaces_remaining: 7
