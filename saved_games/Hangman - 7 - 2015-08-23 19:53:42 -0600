@@ -1,0 +1,16 @@
+---
+:letters_guessed:
+- a
+- e
+- i
+- o
+- u
+- l
+- n
+- r
+- t
+- s
+:body_parts_remaining: 0
+:secret_word: robotic
+:encoded_word: 'r o _ o t i _ '
+:spaces_remaining: 2

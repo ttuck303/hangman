@@ -1,13 +1,21 @@
-def initialize_new_game
+require 'yaml'
 
+def initialize_new_game
+	puts Dir.pwd
+	@state_var = {}
 	dic = File.new("5desk.txt", 'r')
-	@game_dictionary = dic.readlines
-	@dict_entry_count = @game_dictionary.size
-	@letters_guessed = []
-	@body_parts_remaining = 6
-	@secret_word = choose_random_word(@game_dictionary)
-	@encoded_word = encode_word(@secret_word, @letters_guessed)
-	@spaces_remaining = count_spaces_remaining(@encoded_word)
+	game_dictionary = dic.readlines
+	dict_entry_count = game_dictionary.size
+	letters_guessed = []
+	body_parts_remaining = 6
+	secret_word = choose_random_word(game_dictionary)
+	encoded_word = encode_word(secret_word, letters_guessed)
+	spaces_remaining = count_spaces_remaining(encoded_word)
+	# check if a saved_game folder exists, and if it doesn't, create one
+	Dir.mkdir("saved_games") if !Dir.exists?("saved_games")
+	@state_var = {:letters_guessed => letters_guessed, :body_parts_remaining => body_parts_remaining, :secret_word => secret_word, :encoded_word => encoded_word, :spaces_remaining => spaces_remaining}
+	puts @state_var
+	puts @state_var.inspect
 
 	puts "New game initialized!"
 end
@@ -70,31 +78,31 @@ def get_player_guess(guessed_letters)
 end
 
 def score_guess(guessed_letter)
-	if @secret_word.include?(guessed_letter)
+	if @state_var[:secret_word].include?(guessed_letter)
 		puts "Yes, #{guessed_letter} is in the word!"
 	else
-		@body_parts_remaining -=1
+		@state_var[:body_parts_remaining] -=1
 		puts ":O #{guessed_letter} is not in the word!"
 	end
 end
 
 
 def update_game_state
-	@encoded_word = encode_word(@secret_word, @letters_guessed)
-	@spaces_remaining = count_spaces_remaining(@encoded_word)
+	@state_var[:encoded_word] = encode_word(@state_var[:secret_word], @state_var[:letters_guessed])
+	@state_var[:spaces_remaining] = count_spaces_remaining(@state_var[:encoded_word])
 end
 
 def display_game_state
 	puts
 	puts "---------------------------------------"
 	puts 
-	puts @encoded_word
+	puts @state_var[:encoded_word]
 	puts
-	puts "Body parts left: #{@body_parts_remaining}"
+	puts "Body parts left: #{@state_var[:body_parts_remaining]}"
 	puts
-	puts "Spaces remaining: #{@spaces_remaining}"
+	puts "Spaces remaining: #{@state_var[:spaces_remaining]}"
 	puts
-	puts "Letters guessed: #{@letters_guessed.join(', ')}"
+	puts "Letters guessed: #{@state_var[:letters_guessed].join(', ')}"
 	puts
 	puts "---------------------------------------"
 	puts
@@ -102,11 +110,11 @@ end
 
 
 def did_player_win?
-	@spaces_remaining <= 0
+	@state_var[:spaces_remaining] <= 0
 end
 
 def did_player_lose?
-	@body_parts_remaining <= 0
+	@state_var[:body_parts_remaining] <= 0
 end
 
 def is_game_over? #TO DO create a win and a loss message
@@ -114,10 +122,20 @@ def is_game_over? #TO DO create a win and a loss message
 end
 
 def save_game
-	# YAML dump the game_state variable, making it a text file
-	# save the text file
-	# with timestamp and name?
+	# convert state variable to yaml compressed file
+	docked_game_state = YAML.dump(@state_var)
+	# create a new file in the saved folder file path with an interative file name
 
+	time_stamp = Time.now.to_s
+	file_path = "saved_games"
+	existing_game_count = Dir.entries("#{Dir.pwd}/#{file_path}").size
+	file_name = "Hangman - #{existing_game_count} - #{time_stamp}"
+	save_file = File.new("#{file_path}/#{file_name}", 'w')
+
+	# write the yaml contents to the file
+	save_file.write(docked_game_state)
+		# close the file so that it saves
+	save_file.close
 end
 
 def load_game
@@ -125,36 +143,35 @@ def load_game
 	# how do you specify which file to load? Is there a better way than typing out the file path?
 end
 
+def select_game
+	# load the file names from a saved folder 
+	# display as a numbered menu
+	# get user input by reading in text
+end
+
 
 
 
 def game_loop
 	initialize_new_game
+	save_game
 	#puts @secret_word
 	update_game_state
 	display_game_state
 	until is_game_over?
-		score_guess(get_player_guess(@letters_guessed))
+		score_guess(get_player_guess(@state_var[:letters_guessed]))
 		update_game_state
 		display_game_state
 	end
 	puts "You WIN! :)" if did_player_win?
-	puts "you LOSE =( The word was #{@secret_word}!" if did_player_lose?
+	puts "you LOSE =( The word was #{@state_var[:secret_word]}!" if did_player_lose?
+	save_game
 end
 
-game_loop
+#game_loop
 
 
 
-# now that there is a mostly-working hangman, next step is to create a saveable version
 
-# divide game architecture into two parts:
-	# game state variable (hash with everything in it)
-	# architecture for running a game using a game state hash
-	# add options to start a new game, load a game, or save a game
-
-	# file type? Thinking YAML dump will be the best way to store
-
-	# saving branch in git and jumping in
 
 

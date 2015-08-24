@@ -1,0 +1,15 @@
+---
+:letters_guessed:
+- a
+- e
+- i
+- o
+- u
+- s
+- t
+- r
+- y
+:body_parts_remaining: 0
+:secret_word: handwork
+:encoded_word: '_ a _ _ _ o r _ '
+:spaces_remaining: 5
