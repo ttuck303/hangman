@@ -138,18 +138,55 @@ def save_game
 	save_file.close
 end
 
+
+
+def display_saved_games
+	output = []
+	regex_criteria = 'Hangman - '
+	# get an array of all the entries in a directory
+	file_path = "saved_games"
+	existing_games = Dir.entries("#{Dir.pwd}/#{file_path}")
+	# go through the array and only pick those that start with hangman - # (use regex)
+	existing_games.each do |fname|
+		output << fname if fname.match(regex_criteria)
+	end
+
+	output.sort
+
+end
+
+
 def load_game
 	# load the text file, then unwrap the YAML
 	# how do you specify which file to load? Is there a better way than typing out the file path?
 end
 
 def select_game
-	# load the file names from a saved folder 
+
+	puts "The current directory is #{Dir.pwd}"
+	puts
+	# load the file names from the saved game folder
+	puts "Puts enter the game number you would like to load from: "
+	puts
+	saved_games = display_saved_games
+
 	# display as a numbered menu
-	# get user input by reading in text
+	saved_games.each_with_index do |sgame, idx|
+		puts "#{idx} :: #{sgame}"
+	end
+	choice = gets.strip.to_i
+	# TO-DO! clean and check the user input (for now just assume its good)
+	puts "You chose number #{choice}, #{saved_games[choice]}"
+	#return the choice as a File
+	saved_game_file = File.open("#{Dir.pwd}/saved_games/#{saved_games[choice]}", "r")
+	#load the yaml of the file
+	saved_yaml_file = YAML.load(saved_game_file)
+	puts saved_yaml_file
+
 end
 
 
+	# start a new game with the loaded game state file, rather than a totally new game
 
 
 def game_loop
@@ -170,6 +207,8 @@ end
 
 #game_loop
 
+puts display_saved_games
+select_game
 
 
 

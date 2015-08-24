@@ -1,0 +1,17 @@
+---
+:letters_guessed:
+- a
+- e
+- r
+- i
+- s
+- c
+- g
+- t
+- p
+- u
+- l
+:body_parts_remaining: 1
+:secret_word: laurie
+:encoded_word: 'l a u r i e '
+:spaces_remaining: 0
